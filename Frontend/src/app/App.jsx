@@ -1,7 +1,7 @@
 import "./App.css";
 import { Editor } from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import * as Y from "yjs";
 import { SocketIOProvider } from "y-socket.io";
 
@@ -12,13 +12,30 @@ function App() {
     return new URLSearchParams(window.location.search).get("username") || "";
   });
 
+  const [users, setUsers] = useState([]);
   const [usernameInput, setUsernameInput] = useState("");
 
-  const ydoc = useMemo(() => new Y.Doc());
+  const ydoc = useMemo(() => new Y.Doc(), []);
   const yText = useMemo(() => ydoc.getText("monaco"), [ydoc]);
 
   const handleMount = (editor) => {
     editorRef.current = editor;
+  };
+
+  const handleJoin = (e) => {
+    e.preventDefault();
+
+    const name = usernameInput.trim();
+
+    if (!name) return;
+
+    setUsername(name);
+
+    window.history.pushState({}, "", "?username=" + encodeURIComponent(name));
+  };
+
+  useEffect(() => {
+    if (!username || !editorRef.current) return;
 
     const provider = new SocketIOProvider(
       "http://localhost:5000",
@@ -26,40 +43,54 @@ function App() {
       ydoc,
       {
         autoConnect: true,
-      }
+      },
     );
 
-    provider.on("status", ({ status }) => {
-      console.log("Y-Socket status:", status);
+    provider.awareness.setLocalStateField("user", {
+      username,
     });
 
-    provider.on("sync", (isSynced) => {
-      console.log("Y-Socket synced:", isSynced);
-    });
+    const handleAwarenessChange = () => {
+      const states = Array.from(provider.awareness.getStates().values());
 
-    provider.on("connection-error", (error) => {
-      console.error("Y-Socket connection error:", error);
-    });
+      setUsers(
+        states
+          .filter((state) => state?.user?.username)
+          .map((state) => state.user),
+      );
+    };
+
+    provider.awareness.on("change", handleAwarenessChange);
+
+    const handleBeforeUnload = () => {
+      provider.awareness.setLocalStateField("user", null);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     const monacoBinding = new MonacoBinding(
       yText,
-      editor.getModel(),
-      new Set([editor]),
-      provider.awareness
+      editorRef.current.getModel(),
+      new Set([editorRef.current]),
+      provider.awareness,
     );
-  };
 
-  const handleJoin = (e) => {
-    e.preventDefault();
+    return () => {
+      provider.awareness.off("change", handleAwarenessChange);
 
-    setUsername(usernameInput);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
 
-    window.history.pushState(
-      {},
-      "",
-      "?username=" + encodeURIComponent(usernameInput)
-    );
-  };
+      provider.awareness.setLocalStateField("user", null);
+
+      monacoBinding.destroy();
+
+      provider.disconnect();
+
+      provider.destroy();
+
+      setUsers([]);
+    };
+  }, [username, yText, ydoc]);
 
   if (!username) {
     return (
@@ -84,7 +115,11 @@ function App() {
 
   return (
     <main className="h-screen w-full bg-gray-950 flex gap-4 p-4">
-      <aside className="h-full w-1/4 bg-amber-50 rounded-lg"></aside>
+      <aside className="h-full w-1/4 bg-amber-50 rounded-lg">
+        {users.map((user, index) => (
+          <div key={index}>{user.username}</div>
+        ))}
+      </aside>
 
       <section className="w-3/4 bg-neutral-800 rounded-lg overflow-hidden">
         <Editor
