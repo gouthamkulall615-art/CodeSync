@@ -13,26 +13,35 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173"
-  }
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
 });
 
 const ysocketio = new YSocketIO(io);
-ysocketio.initialize()
+ysocketio.initialize();
 
-app.get("/",(req,res)=>{
+app.get("/", (req, res) => {
   res.status(200).json({
-    message:"hello world",
-    success:true
-  })
-})
+    message: "hello world",
+    success: true,
+  });
+});
 
-app.get('/health',(req,res)=>{
+app.get("/health", (req, res) => {
   res.status(200).json({
-    message:"ok",
-    success:true
-  })
-})
+    message: "ok",
+    success: true,
+  });
+});
+
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
+});
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
