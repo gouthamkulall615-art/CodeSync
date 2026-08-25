@@ -18,6 +18,21 @@ const io = new Server(httpServer, {
 });
 
 const ysocketio = new YSocketIO(io);
+ysocketio.initialize()
+
+app.get("/",(req,res)=>{
+  res.status(200).json({
+    message:"hello world",
+    success:true
+  })
+})
+
+app.get('/health',(req,res)=>{
+  res.status(200).json({
+    message:"ok",
+    success:true
+  })
+})
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
