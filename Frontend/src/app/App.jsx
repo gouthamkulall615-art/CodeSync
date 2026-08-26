@@ -1,4 +1,5 @@
 import "./App.css";
+import "../monaco";
 import { Editor } from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
 import { useRef, useMemo, useState, useEffect } from "react";
@@ -14,12 +15,14 @@ function App() {
 
   const [users, setUsers] = useState([]);
   const [usernameInput, setUsernameInput] = useState("");
+  const [editorReady, setEditorReady] = useState(false);
 
   const ydoc = useMemo(() => new Y.Doc(), []);
   const yText = useMemo(() => ydoc.getText("monaco"), [ydoc]);
 
   const handleMount = (editor) => {
     editorRef.current = editor;
+    setEditorReady(true);
   };
 
   const handleJoin = (e) => {
@@ -35,7 +38,9 @@ function App() {
   };
 
   useEffect(() => {
-    if (!username || !editorRef.current) return;
+    if (!username || !editorReady || !editorRef.current) {
+      return;
+    }
 
     const provider = new SocketIOProvider(
       "http://localhost:5000",
@@ -46,11 +51,19 @@ function App() {
       },
     );
 
-    provider.awareness.setLocalStateField("user", {
-      username,
+    provider.on("status", ({ status }) => {
+      console.log("Y-Socket:", status);
     });
 
-    const handleAwarenessChange = () => {
+    provider.on("sync", (synced) => {
+      console.log("Y-Socket synced:", synced);
+    });
+
+    provider.on("connection-error", (error) => {
+      console.error("Y-Socket connection error:", error);
+    });
+
+    const updateUsers = () => {
       const states = Array.from(provider.awareness.getStates().values());
 
       setUsers(
@@ -60,7 +73,22 @@ function App() {
       );
     };
 
-    provider.awareness.on("change", handleAwarenessChange);
+    provider.awareness.setLocalStateField("user", {
+      username,
+    });
+
+    updateUsers();
+
+    provider.awareness.on("change", updateUsers);
+
+    const model = editorRef.current.getModel();
+
+    const monacoBinding = new MonacoBinding(
+      yText,
+      model,
+      new Set([editorRef.current]),
+      provider.awareness,
+    );
 
     const handleBeforeUnload = () => {
       provider.awareness.setLocalStateField("user", null);
@@ -68,15 +96,8 @@ function App() {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    const monacoBinding = new MonacoBinding(
-      yText,
-      editorRef.current.getModel(),
-      new Set([editorRef.current]),
-      provider.awareness,
-    );
-
     return () => {
-      provider.awareness.off("change", handleAwarenessChange);
+      provider.awareness.off("change", updateUsers);
 
       window.removeEventListener("beforeunload", handleBeforeUnload);
 
@@ -90,18 +111,17 @@ function App() {
 
       setUsers([]);
     };
-  }, [username, yText, ydoc]);
+  }, [username, editorReady, yText, ydoc]);
 
   if (!username) {
     return (
-      <main className="h-screen w-full bg-gray-950 flex gap-4 p-4 items-center justify-center">
+      <main className="h-screen w-full bg-gray-950 flex items-center justify-center">
         <form onSubmit={handleJoin} className="flex flex-col gap-4">
           <input
             type="text"
-            placeholder="enter your username"
+            placeholder="Enter your username"
             className="p-2 rounded-lg bg-gray-800 text-white"
             value={usernameInput}
-            name="username"
             onChange={(e) => setUsernameInput(e.target.value)}
           />
 
@@ -115,17 +135,34 @@ function App() {
 
   return (
     <main className="h-screen w-full bg-gray-950 flex gap-4 p-4">
-      <aside className="h-full w-1/4 bg-amber-50 rounded-lg">
-        {users.map((user, index) => (
-          <div key={index}>{user.username}</div>
-        ))}
+      <aside className="h-full w-1/4 bg-amber-50 rounded-lg p-5">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold text-gray-950">Online Users</h2>
+
+          <span className="bg-green-100 text-green-700 text-sm font-semibold px-2 py-1 rounded-full">
+            {users.length}
+          </span>
+        </div>
+
+        <div className="border-t border-gray-300 pt-3">
+          {users.map((user, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-white shadow-sm"
+            >
+              <div className="w-3 h-3 bg-green-500 rounded-full" />
+
+              <span className="text-gray-950 font-medium">{user.username}</span>
+            </div>
+          ))}
+        </div>
       </aside>
 
       <section className="w-3/4 bg-neutral-800 rounded-lg overflow-hidden">
         <Editor
           height="100%"
           defaultLanguage="javascript"
-          defaultValue="//some comment"
+          defaultValue="// Start coding..."
           theme="vs-dark"
           onMount={handleMount}
         />

@@ -7,9 +7,8 @@ import { YSocketIO } from "y-socket.io/dist/server";
 dotenv.config({ path: ".config.env" });
 
 const app = express();
-const httpServer = createServer(app);
 
-const PORT = process.env.PORT || 5000;
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
@@ -19,21 +18,8 @@ const io = new Server(httpServer, {
 });
 
 const ysocketio = new YSocketIO(io);
+
 ysocketio.initialize();
-
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "hello world",
-    success: true,
-  });
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    message: "ok",
-    success: true,
-  });
-});
 
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
@@ -42,6 +28,12 @@ io.on("connection", (socket) => {
     console.log("Socket disconnected:", socket.id);
   });
 });
+
+app.get("/", (req, res) => {
+  res.send("CodeSync server is running");
+});
+
+const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
