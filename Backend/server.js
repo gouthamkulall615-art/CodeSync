@@ -7,6 +7,7 @@ import { YSocketIO } from "y-socket.io/dist/server";
 dotenv.config({ path: ".config.env" });
 
 const app = express();
+app.use(express.static("public"));
 
 const httpServer = createServer(app);
 
@@ -29,9 +30,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send("CodeSync server is running");
-});
+
 
 const PORT = process.env.PORT || 5000;
 
