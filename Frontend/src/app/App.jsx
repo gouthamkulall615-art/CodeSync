@@ -43,7 +43,7 @@ function App() {
     }
 
     const provider = new SocketIOProvider(
-      "http://localhost:5000",
+      "/",
       "monaco",
       ydoc,
       {
