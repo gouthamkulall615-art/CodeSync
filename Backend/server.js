@@ -1,39 +1,22 @@
 import dotenv from "dotenv";
-import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { YSocketIO } from "y-socket.io/dist/server";
+dotenv.config({ path: "config.env" });
 
-dotenv.config({ path: ".config.env" });
+import mongoose from "mongoose";
 
-const app = express();
-app.use(express.static("public"));
-
-const httpServer = createServer(app);
-
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
-});
-
-const ysocketio = new YSocketIO(io);
-
-ysocketio.initialize();
-
-io.on("connection", (socket) => {
-  console.log("Socket connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected:", socket.id);
-  });
-});
-
-
+import { httpServer } from "./app.js";
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URL);
+    console.log(`mongodb connected`);
+  } catch (error) {
+    console.log(`mongodb connection error:${error.message}`);
+    process.exit(1);
+  }
+};
+connectDB();
 
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`server is running on port ${PORT}`);
 });
