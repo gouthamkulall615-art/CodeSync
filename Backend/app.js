@@ -2,10 +2,11 @@ import express from "express";
 import { createServer, METHODS } from "http";
 import { Server } from "socket.io";
 import { YSocketIO } from "y-socket.io/dist/server";
-
+import authRoutes from "./routes/authRoutes.js";
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/api/auth", authRoutes);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
