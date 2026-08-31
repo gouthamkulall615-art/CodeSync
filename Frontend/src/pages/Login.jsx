@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Code2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
 import api from "../api/axios";
 
 export default function Login() {
@@ -21,6 +22,24 @@ export default function Login() {
       setError(err.response?.data?.message || "Login failed");
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const response = await api.post("/auth/google", {
+          access_token: tokenResponse.access_token,
+        });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate("/");
+      } catch (error) {
+        setError(
+          error.response?.data?.message || "google authentication failed",
+        );
+      }
+    },
+    onError: () => setError("google login failed"),
+  });
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center relative overflow-hidden font-sans p-4">
@@ -121,7 +140,11 @@ export default function Login() {
           <div className="flex-grow border-t border-zinc-800"></div>
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2.5 bg-transparent border border-zinc-800 hover:bg-zinc-800/50 text-zinc-300 text-sm font-medium py-3 rounded-xl transition-colors mb-6">
+        <button
+          type="button"
+          onClick={() => loginWithGoogle()}
+          className="w-full flex items-center justify-center gap-2.5 bg-transparent border border-zinc-800 hover:bg-zinc-800/50 text-zinc-300 text-sm font-medium py-3 rounded-xl transition-colors mb-6"
+        >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
