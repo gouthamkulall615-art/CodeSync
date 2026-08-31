@@ -1,0 +1,6 @@
+$kind: collection
+name: auth
+variables:
+  - key: json_web_token_
+    secret: true
+    disabled: false
