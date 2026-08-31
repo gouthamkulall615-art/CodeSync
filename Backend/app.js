@@ -1,10 +1,17 @@
 import express from "express";
+import cors from "cors";
 import { createServer, METHODS } from "http";
 import { Server } from "socket.io";
 import { YSocketIO } from "y-socket.io/dist/server";
 import authRoutes from "./routes/authRoutes.js";
 const app = express();
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Your Vite frontend URL
+    credentials: true,
+  }),
+);
 app.use(express.static("public"));
 app.use("/api/auth", authRoutes);
 
