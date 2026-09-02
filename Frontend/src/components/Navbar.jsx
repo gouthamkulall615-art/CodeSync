@@ -1,9 +1,8 @@
-import { Search, Code2, ArrowRight, Plus } from 'lucide-react';
+import { Search, Code2, ArrowRight, Plus } from "lucide-react";
 
 export default function Navbar() {
   return (
     <nav className="w-full bg-[#0a0a0c] border-b border-zinc-800/60 px-6 py-3.5 flex items-center justify-between font-sans text-white">
-      
       {/* Left: Logo Section */}
       <div className="flex items-center gap-3">
         <div className="bg-blue-600 rounded-lg p-1.5 flex items-center justify-center shadow-[0_0_10px_rgba(37,99,235,0.3)]">
@@ -24,11 +23,12 @@ export default function Navbar() {
 
       {/* Right: Actions & Profile */}
       <div className="flex items-center gap-4">
-        
         {/* Status Indicator */}
         <div className="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full cursor-default">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span className="text-emerald-500 text-xs font-semibold tracking-wide">Room Active</span>
+          <span className="text-emerald-500 text-xs font-semibold tracking-wide">
+            Room Active
+          </span>
         </div>
 
         {/* Join via Code Input */}
