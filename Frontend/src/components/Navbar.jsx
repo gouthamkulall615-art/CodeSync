@@ -1,19 +1,33 @@
-import { Search, Code2, ArrowRight, Plus } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Code2, ArrowRight, Plus, Settings, Moon, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
-  const userInitial = userData.name
-    ? userData.name.charAt(0).toUpperCase()
-    : "U";
+  const userInitial = userData.name ? userData.name.charAt(0).toUpperCase() : "U";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
+
   return (
-    <nav className="w-full bg-[#0a0a0c] border-b border-zinc-800/60 px-6 py-3.5 flex items-center justify-between font-sans text-white">
+    <nav className="w-full bg-[#0a0a0c] border-b border-zinc-800/60 px-6 py-3.5 flex items-center justify-between font-sans text-white relative">
       <div className="flex items-center gap-3">
         <div className="bg-blue-600 rounded-lg p-1.5 flex items-center justify-center shadow-[0_0_10px_rgba(37,99,235,0.3)]">
           <Code2 className="w-5 h-5 text-white" />
@@ -54,13 +68,49 @@ export default function Navbar() {
           Host Room
         </button>
 
-        <button
-          onClick={handleLogout}
-          title="click to logout"
-          className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-500 overflow-hidden ml-1 flex items-center justify-center text-sm font-medium text-zinc-300 transition-colors"
-        >
-          {userInitial}
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-500 overflow-hidden ml-1 flex items-center justify-center text-sm font-medium text-zinc-300 transition-colors focus:outline-none"
+          >
+            {userInitial}
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in slide-in-from-top-2">
+              <div className="px-4 py-2.5 border-b border-zinc-800/80 mb-1">
+                <p className="font-medium text-zinc-200 truncate">{userData.name || "Developer"}</p>
+                <p className="text-xs text-zinc-500 truncate">{userData.email || "user@codesync.io"}</p>
+              </div>
+
+              <button 
+                onClick={() => setDropdownOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+              >
+                <Settings className="w-4 h-4 text-zinc-500" />
+                Settings
+              </button>
+
+              <button 
+                onClick={() => setDropdownOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+              >
+                <Moon className="w-4 h-4 text-zinc-500" />
+                Theme (Dark)
+              </button>
+
+              <div className="border-t border-zinc-800/80 my-1"></div>
+
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-red-400" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
