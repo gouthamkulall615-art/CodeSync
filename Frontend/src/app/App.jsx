@@ -1,21 +1,25 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "../pages/Login.jsx";
-import Dashboard from "../pages/Dashboard.jsx";
-import Workspace from "../pages/Workspace.jsx";
-import Register from "../pages/Register.jsx";
+import { Routes, Route } from "react-router-dom";
+import Landing from "../pages/Landing";
+import Dashboard from "../pages/Dashboard";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import Workspace from "../pages/Workspace";
 
-function App() {
+export default function App() {
   return (
     <Routes>
+      {/* Public Landing Page */}
+      <Route path="/" element={<Landing />} />
+
+      {/* Authenticated Dashboard */}
+      <Route path="/dashboard" element={<Dashboard />} />
+
+      {/* Auth Pages */}
       <Route path="/login" element={<Login />} />
-
-      <Route path="/" element={<Dashboard />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/workspace" element={<Workspace />} />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Collaborative Editor Room */}
+      <Route path="/workspace" element={<Workspace />} />
     </Routes>
   );
 }
-
-export default App;

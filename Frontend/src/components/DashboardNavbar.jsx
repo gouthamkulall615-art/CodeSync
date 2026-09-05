@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, Code2, ArrowRight, Plus, Settings, Moon, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function Navbar() {
+export default function DasboardNavbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();

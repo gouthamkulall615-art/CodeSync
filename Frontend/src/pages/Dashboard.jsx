@@ -1,4 +1,4 @@
-import Navbar from "../components/Navbar";
+import Navbar from "../components/DashboardNavbar";
 import WorkspaceCards from "../components/WorkspaceCards"; // adjust path if placed in components/dashboard/
 
 export default function Dashboard() {
