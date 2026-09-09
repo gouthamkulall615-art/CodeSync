@@ -1,15 +1,19 @@
-import axios from "axios"
-const api=axios.create({
-    baseURL:'http://localhost:5000/api'
-})
+import axios from "axios";
 
-api.interceptors.request.use((config)=>{
-    const token=localStorage.getItem('token');
-    if(token){
-        config.headers.Authorization=`Bearer ${token}`;
+const api = axios.create({
+  // Replace 5000 with whatever port your Node/Express backend is running on
+  baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-    }
-    return config;
-})
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export default api
+export default api;

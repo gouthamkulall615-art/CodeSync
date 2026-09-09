@@ -15,9 +15,10 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await api.post("/auth/login", { email, password });
+      console.log("Backend Response:", response.data);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
@@ -31,7 +32,7 @@ export default function Login() {
         });
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
-        navigate("/");
+        navigate("/dashboard");
       } catch (error) {
         setError(
           error.response?.data?.message || "google authentication failed",
