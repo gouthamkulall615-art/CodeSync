@@ -182,6 +182,29 @@ export default function WorkspaceCards() {
           </button>
         </div>
       </div>
+
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={() => navigate("/workspace")}
+          className="flex items-center gap-2 px-6 py-3 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 border border-purple-500/30 rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.1)] hover:shadow-[0_0_20px_rgba(147,51,234,0.2)]"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Force Join Workspace (Dev)
+        </button>
+      </div>
     </div>
   );
 }
