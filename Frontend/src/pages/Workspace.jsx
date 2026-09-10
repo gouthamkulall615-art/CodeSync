@@ -7,11 +7,20 @@ import { SocketIOProvider } from "y-socket.io";
 import "../app/App.jsx";
 import "../monaco";
 
+// 1. Define a palette of premium colors for the cursors
+const CURSOR_COLORS = [
+  "#3b82f6", // Blue
+  "#10b981", // Emerald
+  "#8b5cf6", // Violet
+  "#f59e0b", // Amber
+  "#ef4444", // Red
+  "#ec4899", // Pink
+];
+
 export default function Workspace() {
   const editorRef = useRef(null);
   const navigate = useNavigate();
 
-  // Extract the ?pin=XXXXXX from the URL
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("pin");
 
@@ -20,10 +29,15 @@ export default function Workspace() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  // 2. Pick a random color for the local user on mount
+  const userColor = useMemo(
+    () => CURSOR_COLORS[Math.floor(Math.random() * CURSOR_COLORS.length)],
+    [],
+  );
+
   const [users, setUsers] = useState([]);
   const [editorReady, setEditorReady] = useState(false);
 
-  // Initialize Yjs Document
   const ydoc = useMemo(() => new Y.Doc(), []);
   const yText = useMemo(() => ydoc.getText("monaco"), [ydoc]);
 
@@ -43,7 +57,6 @@ export default function Workspace() {
       return;
     }
 
-    // Connect Yjs to the backend, using the URL PIN as the isolated room name
     const provider = new SocketIOProvider(
       "http://localhost:5000",
       roomId,
@@ -51,28 +64,28 @@ export default function Workspace() {
       { autoConnect: true },
     );
 
-    provider.on("status", ({ status }) => {
-      console.log("Y-Socket Status:", status);
-    });
-
-    // Handle Peer Awareness (Who is in the room)
+    // 3. Update state mapper to capture the unique Yjs clientId alongside the user data
     const updateUsers = () => {
-      const states = Array.from(provider.awareness.getStates().values());
+      const states = Array.from(provider.awareness.getStates().entries());
       setUsers(
         states
-          .filter((state) => state?.user?.username)
-          .map((state) => state.user),
+          .filter(([clientId, state]) => state?.user?.username)
+          .map(([clientId, state]) => ({
+            clientId,
+            ...state.user,
+          })),
       );
     };
 
+    // 4. Inject the color into the awareness payload
     provider.awareness.setLocalStateField("user", {
       username: user.name,
+      color: userColor,
     });
 
     updateUsers();
     provider.awareness.on("change", updateUsers);
 
-    // Bind Yjs to Monaco
     const model = editorRef.current.getModel();
     const monacoBinding = new MonacoBinding(
       yText,
@@ -84,7 +97,6 @@ export default function Workspace() {
     const handleBeforeUnload = () => {
       provider.awareness.setLocalStateField("user", null);
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
@@ -96,12 +108,57 @@ export default function Workspace() {
       provider.destroy();
       setUsers([]);
     };
-  }, [user, editorReady, yText, ydoc, roomId]);
+  }, [user, editorReady, yText, ydoc, roomId, userColor]);
 
   if (!user) return null;
 
   return (
     <main className="h-screen w-full bg-[#06080c] text-white flex overflow-hidden font-sans">
+      {/* 5. Dynamic CSS Injection for Live Cursors */}
+      <style>
+        {`
+          /* Base styles for the Monaco cursor decorations */
+          .yRemoteSelectionHead {
+            position: absolute;
+            border-left: 2px solid currentColor;
+            box-sizing: border-box;
+            pointer-events: none;
+          }
+          
+          /* Generate specific classes for each connected user */
+          ${users
+            .map(
+              (u) => `
+            .yRemoteSelection-${u.clientId} {
+              background-color: ${u.color}33 !important; /* 33 is hex for 20% opacity */
+            }
+            .yRemoteSelectionHead-${u.clientId} {
+              border-color: ${u.color} !important;
+            }
+            .yRemoteSelectionHead-${u.clientId}::after {
+              content: "${u.username}";
+              position: absolute;
+              top: -18px;
+              left: -2px;
+              background-color: ${u.color};
+              color: #ffffff;
+              font-size: 11px;
+              font-family: inherit;
+              font-weight: 600;
+              padding: 2px 6px;
+              border-radius: 4px;
+              border-bottom-left-radius: 0;
+              white-space: nowrap;
+              z-index: 100;
+              pointer-events: none;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+          `,
+            )
+            .join("\n")}
+        `}
+      </style>
+
       {/* Left Sidebar: Active Peers */}
       <aside className="w-[280px] bg-[#0b0f15] border-r border-zinc-800 p-4 flex flex-col">
         <div className="flex items-center justify-between mb-4">
@@ -119,13 +176,22 @@ export default function Workspace() {
               key={index}
               className="flex items-center gap-3 p-2 bg-blue-500/5 border border-blue-500/30 rounded-md"
             >
-              <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-300 uppercase">
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-sm"
+                style={{ backgroundColor: u.color }}
+              >
                 {u.username.charAt(0)}
               </div>
               <span className="text-sm font-medium text-zinc-200 truncate">
                 {u.username}
               </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-auto shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+              <div
+                className="w-1.5 h-1.5 rounded-full animate-pulse ml-auto"
+                style={{
+                  backgroundColor: u.color,
+                  boxShadow: `0 0 8px ${u.color}80`,
+                }}
+              />
             </div>
           ))}
         </div>
@@ -133,7 +199,6 @@ export default function Workspace() {
 
       {/* Right Section: Monaco Editor */}
       <section className="flex-1 flex flex-col bg-[#06080c]">
-        {/* Fake VS Code Style File Tab */}
         <div className="h-10 border-b border-zinc-800 flex items-center bg-[#0b0f15]">
           <div className="h-full px-4 border-r border-zinc-800 flex items-center border-t-2 border-t-blue-500 bg-[#06080c]">
             <span className="text-zinc-300 text-sm font-mono">main.c</span>

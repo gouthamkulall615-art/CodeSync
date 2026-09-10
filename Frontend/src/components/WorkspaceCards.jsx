@@ -5,14 +5,14 @@ import { useNavigate } from "react-router-dom";
 export default function WorkspaceCards() {
   const navigate = useNavigate();
 
-  // 1. Updated initial state to use the dynamic local or production URL
+
   const [roomUrl, setRoomUrl] = useState(`${window.location.origin}/workspace?pin=123456`);
   const [copied, setCopied] = useState(false);
 
   const [pin, setPin] = useState(["4", "8", "2", "", "", ""]);
   const pinRefs = useRef([]);
 
-  // 2. Removed the hardcoded 'https://' prefix
+
   const handleCopy = () => {
     navigator.clipboard.writeText(roomUrl);
     setCopied(true);
