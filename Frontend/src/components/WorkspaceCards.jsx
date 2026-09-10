@@ -5,22 +5,25 @@ import { useNavigate } from "react-router-dom";
 export default function WorkspaceCards() {
   const navigate = useNavigate();
 
-  const [roomUrl, setRoomUrl] = useState("codesync.io/room/f8a2-9bc1-e872");
+  // 1. Updated initial state to use the dynamic local or production URL
+  const [roomUrl, setRoomUrl] = useState(`${window.location.origin}/workspace?pin=123456`);
   const [copied, setCopied] = useState(false);
 
   const [pin, setPin] = useState(["4", "8", "2", "", "", ""]);
   const pinRefs = useRef([]);
 
+  // 2. Removed the hardcoded 'https://' prefix
   const handleCopy = () => {
-    navigator.clipboard.writeText(`https://${roomUrl}`);
+    navigator.clipboard.writeText(roomUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // 3. Updated to generate a 6-digit numeric PIN and dynamic URL
   const handleGenerateLink = () => {
-    const randomHex = () => Math.random().toString(16).substring(2, 6);
-    const newId = `${randomHex()}-${randomHex()}-${randomHex()}`;
-    setRoomUrl(`codesync.io/room/${newId}`);
+    const newPin = Math.floor(100000 + Math.random() * 900000).toString();
+    setRoomUrl(`${window.location.origin}/workspace?pin=${newPin}`);
+    navigate(`/workspace?pin=${newPin}`);
   };
 
   const handlePinChange = (index, value) => {
@@ -81,7 +84,6 @@ export default function WorkspaceCards() {
         {/* Card 1: Host a New Session */}
         <div className="bg-[#0b0f15]/80 border border-zinc-800/80 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-xl">
           <div>
-            {/* Header with Icon */}
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                 <FiLink size={20} />
@@ -97,7 +99,6 @@ export default function WorkspaceCards() {
               </div>
             </div>
 
-            {/* URL Display Field */}
             <div className="flex items-center justify-between bg-[#06080c] border border-zinc-800 rounded-xl px-4 py-3 mb-6">
               <span className="text-sm font-mono text-zinc-400 truncate select-all">
                 {roomUrl}
@@ -117,7 +118,6 @@ export default function WorkspaceCards() {
             </div>
           </div>
 
-          {/* Action Button */}
           <button
             type="button"
             onClick={handleGenerateLink}
@@ -130,7 +130,6 @@ export default function WorkspaceCards() {
         {/* Card 2: Join via Room Code */}
         <div className="bg-[#0b0f15]/80 border border-zinc-800/80 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-xl">
           <div>
-            {/* Header with Icon */}
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                 <FiLock size={20} />
@@ -145,7 +144,6 @@ export default function WorkspaceCards() {
               </div>
             </div>
 
-            {/* 6-Digit PIN Inputs */}
             <div
               className="grid grid-cols-6 gap-2 sm:gap-3 mb-6"
               onPaste={handlePinPaste}
@@ -171,7 +169,6 @@ export default function WorkspaceCards() {
             </div>
           </div>
 
-          {/* Action Button */}
           <button
             type="button"
             onClick={handleJoinSession}
