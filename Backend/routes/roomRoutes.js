@@ -2,10 +2,9 @@ import express from "express";
 import Room from "../models/Room.js";
 import User from "../models/user.js";
 
-import { protect } from "../middlewares/authMiddleware.js"; 
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
-
 
 router.post("/create", protect, async (req, res) => {
   try {
@@ -17,18 +16,16 @@ router.post("/create", protect, async (req, res) => {
       if (!existingRoom) isUnique = true;
     }
 
-   
     const newRoom = new Room({
       pin,
       host: req.user._id,
-      allowedUsers: [req.user._id], 
+      allowedUsers: [req.user._id],
     });
 
     await newRoom.save();
 
-   
     await User.findByIdAndUpdate(req.user._id, {
-      $push: { hostedRooms: newRoom._id }
+      $push: { hostedRooms: newRoom._id },
     });
 
     res.status(201).json({ success: true, pin });
@@ -44,20 +41,23 @@ router.post("/verify", protect, async (req, res) => {
     const room = await Room.findOne({ pin });
 
     if (!room) {
-      return res.status(404).json({ success: false, message: "Room not found or invalid PIN" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found or invalid PIN" });
     }
 
     if (!room.isActive) {
-      return res.status(403).json({ success: false, message: "This session has been closed" });
+      return res
+        .status(403)
+        .json({ success: false, message: "This session has been closed" });
     }
 
-    
     if (!room.allowedUsers.includes(req.user._id)) {
       room.allowedUsers.push(req.user._id);
       await room.save();
-      
+
       await User.findByIdAndUpdate(req.user._id, {
-        $push: { accessibleRooms: room._id }
+        $push: { accessibleRooms: room._id },
       });
     }
 
