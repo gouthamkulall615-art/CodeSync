@@ -1,34 +1,37 @@
 import React, { useState, useRef } from "react";
 import { FiLink, FiLock, FiCopy, FiCheck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 export default function WorkspaceCards() {
   const navigate = useNavigate();
-
-
-  const [roomUrl, setRoomUrl] = useState(`${window.location.origin}/workspace?pin=123456`);
+  const [roomUrl, setRoomUrl] = useState(
+    `${window.location.origin}/workspace?pin=######`,
+  );
   const [copied, setCopied] = useState(false);
-
-  const [pin, setPin] = useState(["4", "8", "2", "", "", ""]);
+  const [pin, setPin] = useState(["", "", "", "", "", ""]);
   const pinRefs = useRef([]);
 
-
   const handleCopy = () => {
+    if (roomUrl.includes("######")) return;
     navigator.clipboard.writeText(roomUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 3. Updated to generate a 6-digit numeric PIN and dynamic URL
-  const handleGenerateLink = () => {
-    const newPin = Math.floor(100000 + Math.random() * 900000).toString();
-    setRoomUrl(`${window.location.origin}/workspace?pin=${newPin}`);
-    navigate(`/workspace?pin=${newPin}`);
+  const handleGenerateLink = async () => {
+    try {
+      const response = await api.post("/rooms/create");
+      const { pin } = response.data;
+      setRoomUrl(`${window.location.origin}/workspace?pin=${pin}`);
+      navigate(`/workspace?pin=${pin}`);
+    } catch (error) {
+      console.error("Failed to create room:", error);
+    }
   };
 
   const handlePinChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
-
     const newPin = [...pin];
     newPin[index] = value.slice(-1);
     setPin(newPin);
@@ -59,16 +62,21 @@ export default function WorkspaceCards() {
     }
   };
 
-  const handleJoinSession = () => {
+  const handleJoinSession = async () => {
     const fullPin = pin.join("");
     if (fullPin.length === 6) {
-      navigate(`/workspace?pin=${fullPin}`);
+      try {
+        await api.post("/rooms/verify", { pin: fullPin });
+        navigate(`/workspace?pin=${fullPin}`);
+      } catch (error) {
+        console.error("Invalid PIN or unauthorized:", error);
+        setPin(["", "", "", "", "", ""]); // Clears the boxes on failure
+      }
     }
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10">
-      {/* Header Section */}
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
           Collaborative Real-time Workspace
@@ -79,9 +87,8 @@ export default function WorkspaceCards() {
         </p>
       </div>
 
-      {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card 1: Host a New Session */}
+        {/* Host Session Card */}
         <div className="bg-[#0b0f15]/80 border border-zinc-800/80 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-xl">
           <div>
             <div className="flex items-start gap-4 mb-6">
@@ -127,7 +134,7 @@ export default function WorkspaceCards() {
           </button>
         </div>
 
-        {/* Card 2: Join via Room Code */}
+        {/* Join Session Card */}
         <div className="bg-[#0b0f15]/80 border border-zinc-800/80 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-xl">
           <div>
             <div className="flex items-start gap-4 mb-6">
@@ -178,29 +185,6 @@ export default function WorkspaceCards() {
             Join Active Session
           </button>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-center">
-        <button
-          onClick={() => navigate("/workspace")}
-          className="flex items-center gap-2 px-6 py-3 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 border border-purple-500/30 rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.1)] hover:shadow-[0_0_20px_rgba(147,51,234,0.2)]"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-          Force Join Workspace (Dev)
-        </button>
       </div>
     </div>
   );

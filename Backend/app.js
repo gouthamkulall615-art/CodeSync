@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { YSocketIO } from "y-socket.io/dist/server";
 import authRoutes from "./routes/authRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,7 @@ app.use(
 );
 app.use(express.static("public"));
 app.use("/api/auth", authRoutes);
+app.use("/api/rooms", roomRoutes);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
