@@ -96,7 +96,7 @@ export const googleLogin = async (req, res) => {
       });
     }
 
-    // Generate CodeSync JWT
+    // Generate SyncCanvas JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
