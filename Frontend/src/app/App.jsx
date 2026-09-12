@@ -18,7 +18,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Collaborative Editor Room */}
+      {/* Collaborative Workspace */}
       <Route path="/workspace" element={<Workspace />} />
     </Routes>
   );

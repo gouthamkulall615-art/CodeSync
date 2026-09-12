@@ -35,7 +35,7 @@ export default function Register() {
           <div className="bg-blue-600/20 border border-blue-500/30 p-3.5 rounded-2xl mb-5 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
             <Code2 className="text-blue-500 w-6 h-6" />
           </div>
-          <h1 className="text-xl font-semibold tracking-wide mb-6">CodeSync</h1>
+          <h1 className="text-xl font-semibold tracking-wide mb-6">SyncCanvas</h1>
           <h2 className="text-2xl font-bold mb-2">Create an account</h2>
           <p className="text-sm text-zinc-400">Start collaborating on code instantly</p>
         </div>

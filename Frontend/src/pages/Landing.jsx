@@ -79,7 +79,7 @@ export default function Landing() {
 
               <div className="flex items-center gap-1 text-xs">
                 <div className="px-3 py-1 bg-zinc-900/50 text-zinc-500 rounded-md">
-                  bash – codesync-server
+                  bash – syncanvas-server
                 </div>
                 <div className="px-3 py-1 bg-zinc-900/50 text-zinc-500 rounded-md">
                   tailwind.config.js
@@ -107,7 +107,7 @@ export default function Landing() {
               <span className="text-emerald-400">$</span> npm run dev
               <br />
               <span className="text-zinc-600">
-                &gt; codesync-server@1.4.2 dev
+                &gt; syncanvas-server@1.4.2 dev
               </span>
               <br />
               <span className="text-blue-400">ready</span>
@@ -119,7 +119,7 @@ export default function Landing() {
                 <span className="text-purple-400">import</span> &#123; useSync
                 &#125; <span className="text-purple-400">from</span>{" "}
                 <span className="text-emerald-300">
-                  &apos;@codesync/react&apos;
+                  &apos;@syncanvas/react&apos;
                 </span>
                 ;
               </div>

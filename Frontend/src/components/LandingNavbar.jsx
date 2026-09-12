@@ -28,7 +28,7 @@ export default function LandingNavbar() {
           <div className="bg-blue-600/10 border border-blue-500/20 p-1.5 rounded-lg">
             <Code2 className="w-5 h-5 text-blue-500" />
           </div>
-          <span className="text-white font-semibold tracking-wide text-lg">CodeSync</span>
+          <span className="text-white font-semibold tracking-wide text-lg">SyncCanvas</span>
         </Link>
 
         {/* Desktop Links */}

@@ -32,7 +32,7 @@ export default function DasboardNavbar() {
         <div className="bg-blue-600 rounded-lg p-1.5 flex items-center justify-center shadow-[0_0_10px_rgba(37,99,235,0.3)]">
           <Code2 className="w-5 h-5 text-white" />
         </div>
-        <span className="font-semibold text-lg tracking-wide">CodeSync</span>
+        <span className="font-semibold text-lg tracking-wide">SyncCanvas</span>
       </div>
 
       <div className="hidden md:flex relative w-[400px] max-w-md">
@@ -80,7 +80,7 @@ export default function DasboardNavbar() {
             <div className="absolute right-0 mt-2 w-56 bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-2.5 border-b border-zinc-800/80 mb-1">
                 <p className="font-medium text-zinc-200 truncate">{userData.name || "Developer"}</p>
-                <p className="text-xs text-zinc-500 truncate">{userData.email || "user@codesync.io"}</p>
+                <p className="text-xs text-zinc-500 truncate">{userData.email || "user@syncanvas.io"}</p>
               </div>
 
               <button 
