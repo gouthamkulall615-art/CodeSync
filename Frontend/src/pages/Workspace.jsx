@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import * as Y from "yjs";
 import { SocketIOProvider } from "y-socket.io";
 import "../app/App.jsx";
+import CanvasBoard from "../components/CanvasBoard";
 
 const CURSOR_COLORS = [
   "#3b82f6",
@@ -107,10 +108,8 @@ export default function Workspace() {
         </div>
       </aside>
 
-      <section className="flex-1 flex items-center justify-center bg-[#06080c] min-w-0">
-        <div className="placeholder-canvas text-zinc-500 text-sm">
-          Canvas coming soon
-        </div>
+      <section className="flex-1 flex bg-[#06080c] min-w-0 min-h-0">
+        <CanvasBoard />
       </section>
     </main>
   );
