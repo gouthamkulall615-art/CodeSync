@@ -1,13 +1,17 @@
-// src/components/CanvasBoard.jsx
 import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Rect, Circle, Transformer } from "react-konva";
+import {
+  FiMousePointer,
+  FiSquare,
+  FiCircle,
+  FiTrash2,
+  FiMoreVertical,
+} from "react-icons/fi";
 import "./CanvasBoard.css";
 
 let idCounter = 0;
 const nextId = () => `shape-${Date.now()}-${idCounter++}`;
 
-// shapesMap: a Y.Map<string, shapeData> passed down from Workspace.jsx,
-// shared across all connected clients via the existing Yjs document.
 export default function CanvasBoard({ shapesMap }) {
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -16,7 +20,6 @@ export default function CanvasBoard({ shapesMap }) {
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
-  // Size the canvas to fill its parent container, not the whole browser window
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -31,31 +34,22 @@ export default function CanvasBoard({ shapesMap }) {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Keep local React state in sync with the shared Yjs map.
-  // This runs on mount (to load any shapes already in the room) and again
-  // any time ANY client (including this one) changes the map.
   useEffect(() => {
     if (!shapesMap) return;
-
     const syncFromMap = () => {
       const arr = [];
-      shapesMap.forEach((value, key) => {
-        arr.push({ ...value, id: key });
-      });
+      shapesMap.forEach((value, key) => arr.push({ ...value, id: key }));
       setShapes(arr);
     };
-
-    syncFromMap(); // initial load
+    syncFromMap();
     shapesMap.observe(syncFromMap);
     return () => shapesMap.unobserve(syncFromMap);
   }, [shapesMap]);
 
-  // Attach the transformer (resize handles) to whichever shape is selected
   useEffect(() => {
     if (!transformerRef.current) return;
     const stage = stageRef.current;
     const selectedNode = selectedId ? stage.findOne(`#${selectedId}`) : null;
-
     if (selectedNode) {
       transformerRef.current.nodes([selectedNode]);
     } else {
@@ -68,11 +62,11 @@ export default function CanvasBoard({ shapesMap }) {
     const id = nextId();
     shapesMap.set(id, {
       type: "rect",
-      x: 80 + Math.random() * 200,
-      y: 80 + Math.random() * 150,
+      x: 300,
+      y: 200,
       width: 120,
-      height: 80,
-      fill: "#4f7cff",
+      height: 120,
+      fill: "#3b82f6",
     });
     setSelectedId(id);
   };
@@ -81,10 +75,10 @@ export default function CanvasBoard({ shapesMap }) {
     const id = nextId();
     shapesMap.set(id, {
       type: "circle",
-      x: 150 + Math.random() * 200,
-      y: 150 + Math.random() * 150,
-      radius: 50,
-      fill: "#ff7a59",
+      x: 450,
+      y: 250,
+      radius: 60,
+      fill: "#ef4444",
     });
     setSelectedId(id);
   };
@@ -95,27 +89,20 @@ export default function CanvasBoard({ shapesMap }) {
     setSelectedId(null);
   };
 
-  // Click on empty canvas area deselects everything
   const handleStageMouseDown = (e) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedId(null);
-    }
+    if (e.target === e.target.getStage()) setSelectedId(null);
   };
 
   const updateShapePosition = (id, x, y) => {
     const existing = shapesMap.get(id);
-    if (!existing) return;
-    shapesMap.set(id, { ...existing, x, y });
+    if (existing) shapesMap.set(id, { ...existing, x, y });
   };
 
   const updateShapeTransform = (id, node) => {
-    // On resize, Konva scales the node rather than changing width/height directly.
-    // We read the scale, apply it to width/height, then reset scale to 1.
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
     node.scaleX(1);
     node.scaleY(1);
-
     const existing = shapesMap.get(id);
     if (!existing) return;
 
@@ -137,11 +124,12 @@ export default function CanvasBoard({ shapesMap }) {
     }
   };
 
-  // Delete key removes the currently selected shape
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (document.activeElement.tagName === "INPUT") return;
+      if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        document.activeElement.tagName !== "INPUT"
+      ) {
         deleteSelected();
       }
     };
@@ -150,23 +138,98 @@ export default function CanvasBoard({ shapesMap }) {
   }, [selectedId]);
 
   return (
-    <div className="canvas-board">
-      <div className="canvas-toolbar">
-        <button onClick={addRectangle}>Add Rectangle</button>
-        <button onClick={addCircle}>Add Circle</button>
-        <button onClick={deleteSelected} disabled={!selectedId}>
-          Delete Selected
+    <div className="canvas-board relative w-full h-full">
+      {/* Top-Center Floating Toolbar */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1d24]/95 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-2 flex items-center gap-1 shadow-2xl">
+        <button
+          className="p-2.5 text-blue-400 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-colors"
+          title="Select"
+        >
+          <FiMousePointer size={18} />
+        </button>
+        <div className="w-px h-6 bg-zinc-700/50 mx-1"></div>
+        <button
+          onClick={addRectangle}
+          className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors"
+          title="Rectangle"
+        >
+          <FiSquare size={18} />
+        </button>
+        <button
+          onClick={addCircle}
+          className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors"
+          title="Circle"
+        >
+          <FiCircle size={18} />
         </button>
       </div>
 
-      <div ref={containerRef} className="canvas-container">
+      {/* Right-Side Properties Panel (Contextual) */}
+      {selectedId && (
+        <div className="absolute right-6 top-24 z-50 bg-[#1a1d24]/95 backdrop-blur-md border border-zinc-800/80 rounded-xl p-5 w-64 shadow-2xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+              Inspect Shape
+            </h3>
+            <FiMoreVertical className="text-zinc-500" />
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <p className="text-[11px] text-zinc-500 uppercase tracking-wider mb-2">
+                Fill Color
+              </p>
+              <div className="flex gap-2">
+                {["#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981"].map(
+                  (color) => (
+                    <button
+                      key={color}
+                      className="w-6 h-6 rounded-md border border-zinc-700/50 transition-transform hover:scale-110"
+                      style={{ backgroundColor: color }}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[11px] text-zinc-500 uppercase tracking-wider mb-2">
+                Stroke Width
+              </p>
+              <div className="flex bg-[#0e1116] rounded-lg p-1 border border-zinc-800">
+                <button className="flex-1 py-1.5 text-xs text-zinc-400 hover:text-white rounded-md">
+                  Thin
+                </button>
+                <button className="flex-1 py-1.5 text-xs bg-zinc-800 text-white rounded-md shadow-sm">
+                  Medium
+                </button>
+                <button className="flex-1 py-1.5 text-xs text-zinc-400 hover:text-white rounded-md">
+                  Bold
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-800/80">
+              <button
+                onClick={deleteSelected}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                Remove element
+                <FiTrash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Konva Canvas */}
+      <div ref={containerRef} className="canvas-container cursor-crosshair">
         {size.width > 0 && (
           <Stage
             ref={stageRef}
             width={size.width}
             height={size.height}
             onMouseDown={handleStageMouseDown}
-            style={{ background: "#f5f6fa" }}
           >
             <Layer>
               {shapes.map((shape) => {
@@ -182,39 +245,38 @@ export default function CanvasBoard({ shapesMap }) {
                     updateShapePosition(shape.id, e.target.x(), e.target.y()),
                   onTransformEnd: (e) =>
                     updateShapeTransform(shape.id, e.target),
-                  stroke: selectedId === shape.id ? "#222" : undefined,
-                  strokeWidth: selectedId === shape.id ? 2 : 0,
                 };
 
-                if (shape.type === "rect") {
-                  return (
-                    <Rect
-                      key={shape.id}
-                      {...commonProps}
-                      width={shape.width}
-                      height={shape.height}
-                    />
-                  );
-                }
-                if (shape.type === "circle") {
-                  return (
-                    <Circle
-                      key={shape.id}
-                      {...commonProps}
-                      radius={shape.radius}
-                    />
-                  );
-                }
-                return null;
+                return shape.type === "rect" ? (
+                  <Rect
+                    key={shape.id}
+                    {...commonProps}
+                    width={shape.width}
+                    height={shape.height}
+                    cornerRadius={4}
+                  />
+                ) : shape.type === "circle" ? (
+                  <Circle
+                    key={shape.id}
+                    {...commonProps}
+                    radius={shape.radius}
+                  />
+                ) : null;
               })}
 
               <Transformer
                 ref={transformerRef}
                 rotateEnabled={false}
-                boundBoxFunc={(oldBox, newBox) => {
-                  if (newBox.width < 20 || newBox.height < 20) return oldBox;
-                  return newBox;
-                }}
+                anchorSize={10}
+                anchorCornerRadius={5}
+                anchorStroke="#3b82f6"
+                anchorFill="#ffffff"
+                borderStroke="#3b82f6"
+                borderStrokeWidth={1.5}
+                keepRatio={false}
+                boundBoxFunc={(oldBox, newBox) =>
+                  newBox.width < 20 || newBox.height < 20 ? oldBox : newBox
+                }
               />
             </Layer>
           </Stage>

@@ -1,44 +1,16 @@
-/* src/components/CanvasBoard.css */
-
 .canvas-board {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  position: relative;
 }
 
 .canvas-container {
-  flex: 1;
-  min-height: 0;
-}
-
-.canvas-toolbar {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  background: #1c1f26;
-  border-bottom: 1px solid #2a2e37;
-}
-
-.canvas-toolbar button {
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #3a3f4b;
-  background: #2a2e37;
-  color: #f0f1f3;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.canvas-toolbar button:hover:not(:disabled) {
-  background: #3a3f4b;
-}
-
-.canvas-toolbar button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+  width: 100%;
+  height: 100%;
+  background-color: #0e1116; /* Matches the deep neutral background */
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
 }

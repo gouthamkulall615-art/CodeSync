@@ -2,7 +2,6 @@ import { useMemo, useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import * as Y from "yjs";
 import { SocketIOProvider } from "y-socket.io";
-import "../app/App.jsx";
 import CanvasBoard from "../components/CanvasBoard";
 
 const CURSOR_COLORS = [
@@ -30,9 +29,6 @@ export default function Workspace() {
   );
   const [users, setUsers] = useState([]);
   const ydoc = useMemo(() => new Y.Doc(), []);
-
-  // Shared Yjs map for canvas shapes — same document as the peer-presence
-  // awareness above, just a different piece of shared state on top of it.
   const shapesMap = useMemo(() => ydoc.getMap("shapes"), [ydoc]);
 
   useEffect(() => {
@@ -52,7 +48,6 @@ export default function Workspace() {
 
     const updateUsers = () => {
       const states = Array.from(provider.awareness.getStates().entries());
-      console.log("RAW AWARENESS STATES:", states); // TEMP DEBUG — remove after fixing
       setUsers(
         states
           .filter(([, state]) => state?.user?.username)
@@ -84,37 +79,41 @@ export default function Workspace() {
   if (!user) return null;
 
   return (
-    <main className="h-screen w-full bg-[#06080c] text-white flex overflow-hidden font-sans">
-      <aside className="w-[280px] bg-[#0b0f15] border-r border-zinc-800 p-4 flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[13px] font-semibold text-zinc-400 uppercase tracking-wider">
-            Active Peers
-          </h2>
-          <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-            {users.length}
+    <main className="h-screen w-full bg-[#0e1116] flex overflow-hidden font-sans relative select-none">
+      {/* Floating Top-Left HUD */}
+      <div className="absolute top-6 left-6 z-50 bg-[#1a1d24]/95 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-4 w-60 shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]">
+            S
+          </div>
+          <h1 className="text-sm font-bold tracking-wide text-white">
+            SyncCanvas
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+          <span className="text-[11px] text-zinc-400 font-medium uppercase tracking-wider">
+            {users.length} Active Now
           </span>
         </div>
-        <div className="space-y-2">
+
+        <div className="flex items-center -space-x-2 pl-1">
           {users.map((u) => (
             <div
               key={u.clientId}
-              className="flex items-center gap-3 p-2 bg-blue-500/5 border border-blue-500/30 rounded-md"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-[#1a1d24] shadow-sm"
+              style={{ backgroundColor: u.color }}
+              title={u.username}
             >
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-sm"
-                style={{ backgroundColor: u.color }}
-              >
-                {u.username.charAt(0)}
-              </div>
-              <span className="text-sm font-medium text-zinc-200 truncate">
-                {u.username}
-              </span>
+              {u.username.charAt(0)}
             </div>
           ))}
         </div>
-      </aside>
+      </div>
 
-      <section className="flex-1 flex bg-[#06080c] min-w-0 min-h-0">
+      {/* Canvas Area */}
+      <section className="flex-1 w-full h-full relative">
         <CanvasBoard shapesMap={shapesMap} />
       </section>
     </main>
