@@ -158,6 +158,14 @@ export default function CanvasBoard({ shapesMap, awareness }) {
     setSelectedId(null);
   };
 
+  const updateShapeColor = (newColor) => {
+    if (!selectedId) return;
+    const existing = shapesMap.get(selectedId);
+    if (existing) {
+      shapesMap.set(selectedId, { ...existing, fill: newColor });
+    }
+  };
+
   const updateShapePosition = (id, x, y) => {
     const existing = shapesMap.get(id);
     if (existing) shapesMap.set(id, { ...existing, x, y });
@@ -243,13 +251,26 @@ export default function CanvasBoard({ shapesMap, awareness }) {
               </p>
               <div className="flex gap-2">
                 {["#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981"].map(
-                  (color) => (
-                    <button
-                      key={color}
-                      className="w-6 h-6 rounded-md border border-zinc-700/50 transition-transform hover:scale-110"
-                      style={{ backgroundColor: color }}
-                    />
-                  ),
+                  (color) => {
+                    // Find the currently selected shape to highlight its active color
+                    const currentShape = shapes.find(
+                      (s) => s.id === selectedId,
+                    );
+                    const isActive = currentShape?.fill === color;
+
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => updateShapeColor(color)}
+                        className={`w-6 h-6 rounded-md border transition-all hover:scale-110 ${
+                          isActive
+                            ? "scale-110 border-white shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                            : "border-zinc-700/50"
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    );
+                  },
                 )}
               </div>
             </div>
