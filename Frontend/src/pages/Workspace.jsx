@@ -27,7 +27,10 @@ export default function Workspace() {
     () => CURSOR_COLORS[Math.floor(Math.random() * CURSOR_COLORS.length)],
     [],
   );
+
   const [users, setUsers] = useState([]);
+  const [awareness, setAwareness] = useState(null);
+
   const ydoc = useMemo(() => new Y.Doc(), []);
   const shapesMap = useMemo(() => ydoc.getMap("shapes"), [ydoc]);
 
@@ -36,14 +39,16 @@ export default function Workspace() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!user?.name || !roomId) return;
+    if (!user || !roomId) return;
+
+    // Grab username safely regardless of DB schema
+    const myUsername = user.name || user.username || "Peer";
 
     const provider = new SocketIOProvider(
       "http://localhost:5000",
       roomId,
       ydoc,
-      { autoConnect: true },
-      { transports: ["polling", "websocket"] },
+      { autoConnect: true }, // Removed the invalid 5th argument
     );
 
     const updateUsers = () => {
@@ -55,12 +60,18 @@ export default function Workspace() {
       );
     };
 
+    // Initialize local state with a null cursor
     provider.awareness.setLocalStateField("user", {
-      username: user.name,
+      username: myUsername,
       color: userColor,
+      cursor: null,
     });
+
     updateUsers();
     provider.awareness.on("change", updateUsers);
+
+    // Pass awareness to CanvasBoard
+    setAwareness(provider.awareness);
 
     const handleBeforeUnload = () =>
       provider.awareness.setLocalStateField("user", null);
@@ -73,6 +84,7 @@ export default function Workspace() {
       provider.disconnect();
       provider.destroy();
       setUsers([]);
+      setAwareness(null);
     };
   }, [user, ydoc, roomId, userColor]);
 
@@ -80,7 +92,6 @@ export default function Workspace() {
 
   return (
     <main className="h-screen w-full bg-[#0e1116] flex overflow-hidden font-sans relative select-none">
-      {/* Floating Top-Left HUD */}
       <div className="absolute top-6 left-6 z-50 bg-[#1a1d24]/95 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-4 w-60 shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]">
@@ -112,9 +123,8 @@ export default function Workspace() {
         </div>
       </div>
 
-      {/* Canvas Area */}
       <section className="flex-1 w-full h-full relative">
-        <CanvasBoard shapesMap={shapesMap} />
+        <CanvasBoard shapesMap={shapesMap} awareness={awareness} />
       </section>
     </main>
   );
