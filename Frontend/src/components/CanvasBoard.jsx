@@ -4,9 +4,11 @@ import { Stage, Layer, Rect, Circle, Transformer } from "react-konva";
 import "./CanvasBoard.css";
 
 let idCounter = 0;
-const nextId = () => `shape-${idCounter++}`;
+const nextId = () => `shape-${Date.now()}-${idCounter++}`;
 
-export default function CanvasBoard() {
+// shapesMap: a Y.Map<string, shapeData> passed down from Workspace.jsx,
+// shared across all connected clients via the existing Yjs document.
+export default function CanvasBoard({ shapesMap }) {
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const stageRef = useRef(null);
@@ -29,6 +31,25 @@ export default function CanvasBoard() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
+  // Keep local React state in sync with the shared Yjs map.
+  // This runs on mount (to load any shapes already in the room) and again
+  // any time ANY client (including this one) changes the map.
+  useEffect(() => {
+    if (!shapesMap) return;
+
+    const syncFromMap = () => {
+      const arr = [];
+      shapesMap.forEach((value, key) => {
+        arr.push({ ...value, id: key });
+      });
+      setShapes(arr);
+    };
+
+    syncFromMap(); // initial load
+    shapesMap.observe(syncFromMap);
+    return () => shapesMap.unobserve(syncFromMap);
+  }, [shapesMap]);
+
   // Attach the transformer (resize handles) to whichever shape is selected
   useEffect(() => {
     if (!transformerRef.current) return;
@@ -45,40 +66,32 @@ export default function CanvasBoard() {
 
   const addRectangle = () => {
     const id = nextId();
-    setShapes((prev) => [
-      ...prev,
-      {
-        id,
-        type: "rect",
-        x: 80 + Math.random() * 200,
-        y: 80 + Math.random() * 150,
-        width: 120,
-        height: 80,
-        fill: "#4f7cff",
-      },
-    ]);
+    shapesMap.set(id, {
+      type: "rect",
+      x: 80 + Math.random() * 200,
+      y: 80 + Math.random() * 150,
+      width: 120,
+      height: 80,
+      fill: "#4f7cff",
+    });
     setSelectedId(id);
   };
 
   const addCircle = () => {
     const id = nextId();
-    setShapes((prev) => [
-      ...prev,
-      {
-        id,
-        type: "circle",
-        x: 150 + Math.random() * 200,
-        y: 150 + Math.random() * 150,
-        radius: 50,
-        fill: "#ff7a59",
-      },
-    ]);
+    shapesMap.set(id, {
+      type: "circle",
+      x: 150 + Math.random() * 200,
+      y: 150 + Math.random() * 150,
+      radius: 50,
+      fill: "#ff7a59",
+    });
     setSelectedId(id);
   };
 
   const deleteSelected = () => {
     if (!selectedId) return;
-    setShapes((prev) => prev.filter((s) => s.id !== selectedId));
+    shapesMap.delete(selectedId);
     setSelectedId(null);
   };
 
@@ -90,7 +103,9 @@ export default function CanvasBoard() {
   };
 
   const updateShapePosition = (id, x, y) => {
-    setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
+    const existing = shapesMap.get(id);
+    if (!existing) return;
+    shapesMap.set(id, { ...existing, x, y });
   };
 
   const updateShapeTransform = (id, node) => {
@@ -101,36 +116,31 @@ export default function CanvasBoard() {
     node.scaleX(1);
     node.scaleY(1);
 
-    setShapes((prev) =>
-      prev.map((s) => {
-        if (s.id !== id) return s;
-        if (s.type === "rect") {
-          return {
-            ...s,
-            x: node.x(),
-            y: node.y(),
-            width: Math.max(20, node.width() * scaleX),
-            height: Math.max(20, node.height() * scaleY),
-          };
-        }
-        if (s.type === "circle") {
-          return {
-            ...s,
-            x: node.x(),
-            y: node.y(),
-            radius: Math.max(10, node.radius() * scaleX),
-          };
-        }
-        return s;
-      }),
-    );
+    const existing = shapesMap.get(id);
+    if (!existing) return;
+
+    if (existing.type === "rect") {
+      shapesMap.set(id, {
+        ...existing,
+        x: node.x(),
+        y: node.y(),
+        width: Math.max(20, node.width() * scaleX),
+        height: Math.max(20, node.height() * scaleY),
+      });
+    } else if (existing.type === "circle") {
+      shapesMap.set(id, {
+        ...existing,
+        x: node.x(),
+        y: node.y(),
+        radius: Math.max(10, node.radius() * scaleX),
+      });
+    }
   };
 
   // Delete key removes the currently selected shape
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Delete" || e.key === "Backspace") {
-        // Avoid hijacking Backspace while typing in an input elsewhere on the page
         if (document.activeElement.tagName === "INPUT") return;
         deleteSelected();
       }
@@ -202,7 +212,6 @@ export default function CanvasBoard() {
                 ref={transformerRef}
                 rotateEnabled={false}
                 boundBoxFunc={(oldBox, newBox) => {
-                  // Prevent shapes from being resized to nothing
                   if (newBox.width < 20 || newBox.height < 20) return oldBox;
                   return newBox;
                 }}

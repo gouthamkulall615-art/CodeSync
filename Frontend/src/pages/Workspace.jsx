@@ -31,6 +31,10 @@ export default function Workspace() {
   const [users, setUsers] = useState([]);
   const ydoc = useMemo(() => new Y.Doc(), []);
 
+  // Shared Yjs map for canvas shapes — same document as the peer-presence
+  // awareness above, just a different piece of shared state on top of it.
+  const shapesMap = useMemo(() => ydoc.getMap("shapes"), [ydoc]);
+
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
@@ -43,10 +47,12 @@ export default function Workspace() {
       roomId,
       ydoc,
       { autoConnect: true },
+      { transports: ["polling", "websocket"] },
     );
 
     const updateUsers = () => {
       const states = Array.from(provider.awareness.getStates().entries());
+      console.log("RAW AWARENESS STATES:", states); // TEMP DEBUG — remove after fixing
       setUsers(
         states
           .filter(([, state]) => state?.user?.username)
@@ -109,7 +115,7 @@ export default function Workspace() {
       </aside>
 
       <section className="flex-1 flex bg-[#06080c] min-w-0 min-h-0">
-        <CanvasBoard />
+        <CanvasBoard shapesMap={shapesMap} />
       </section>
     </main>
   );
