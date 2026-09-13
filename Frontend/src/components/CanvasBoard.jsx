@@ -59,17 +59,23 @@ export default function CanvasBoard({ shapesMap, awareness }) {
     return () => shapesMap.unobserve(syncFromMap);
   }, [shapesMap]);
 
+  // Sync Remote Cursors from Awareness
   useEffect(() => {
     if (!awareness) return;
+
     const updateCursors = () => {
       const states = Array.from(awareness.getStates().entries());
-      const localClientId = awareness.clientID;
+
+      // CRITICAL FIX: Use the document's underlying client ID
+      const localClientId = awareness.doc.clientID;
 
       const others = states
-        .filter(
-          ([clientId, state]) =>
-            clientId !== localClientId && state?.user?.cursor,
-        )
+        .filter(([clientId, state]) => {
+          // Force string comparison to safely filter out your own local cursor
+          return (
+            String(clientId) !== String(localClientId) && state?.user?.cursor
+          );
+        })
         .map(([clientId, state]) => ({
           clientId,
           ...state.user,
